@@ -343,8 +343,33 @@ Ask the human to open the repo's **Actions** tab and confirm the `CI` run for th
 ## Task 5: MapLibre base map of Dallas
 
 **Files:**
-- Create: `src/lib/config.ts`, `src/lib/config.test.ts`, `src/components/BaseMap.tsx`, `src/components/BaseMap.test.tsx`, `.env`, `.env.example`
-- Modify: `src/app/page.tsx`, `src/app/globals.css`, `src/app/layout.tsx`
+- Create: `src/lib/config.ts`, `src/lib/config.test.ts`, `src/components/BaseMap.tsx`, `src/components/BaseMap.test.tsx`, `src/lib/maplibre.ts`, `scripts/copy-maplibre-worker.mjs`, `.env`, `.env.example`
+- Modify: `src/app/page.tsx`, `src/app/globals.css`, `src/app/layout.tsx`, `package.json`, `eslint.config.mjs`
+
+**Execution notes (2026-08-28) — maplibre-gl v6 integration:**
+1. **No default export.** v6 is ESM-only with named exports. Use
+   `import { Map as MapLibreMap, NavigationControl, setWorkerUrl } from "maplibre-gl"`,
+   not `import maplibregl from "maplibre-gl"`. The `BaseMap.test.tsx` mock must be a
+   flat object (no `default:` key) and include `setWorkerUrl: vi.fn()`.
+2. **Web worker must be vendored.** v6 loads its worker as an ESM module that
+   imports a sibling `maplibre-gl-shared.mjs`; neither Turbopack nor webpack emits
+   those next to the app bundle, so the worker 404s and only raster tiles render
+   (vector tiles are parsed in the worker). v6 also removed the old CSP single-file
+   worker. Fix: `scripts/copy-maplibre-worker.mjs` copies
+   `maplibre-gl-worker.mjs` + `maplibre-gl-shared.mjs` from `node_modules` into
+   `public/vendor/maplibre/` (gitignored), wired to `postinstall` / `predev` /
+   `prebuild`; `src/lib/maplibre.ts` calls
+   `setWorkerUrl("/vendor/maplibre/maplibre-gl-worker.mjs")` once, and `BaseMap`
+   calls `configureMapLibre()` before constructing the map. OpenNext's
+   `deploy` / `preview` scripts (Task 7) must run the copy script explicitly since
+   they bypass npm's `prebuild` hook.
+3. **ESLint.** Add `"public/**"` to `globalIgnores` in `eslint.config.mjs` or the
+   minified vendored bundle produces ~1000 warnings.
+4. **Turbopack stays the default** (`next dev` / `next build` unchanged) — the
+   worker issue is bundler-independent and the vendoring fix resolves it for both.
+5. **Benign console noise:** OpenFreeMap's Liberty style logs
+   `Image "us-interstate_N" could not be loaded` — cosmetic, addressed by a custom
+   style in Phase 3.
 
 - [ ] **Step 1: Install MapLibre**
 
