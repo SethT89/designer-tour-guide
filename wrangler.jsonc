@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "designer-tour-guide",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Self-reference used by OpenNext for cache revalidation. Name must match "name".
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "designer-tour-guide"
+    }
+  ],
+  "images": {
+    "binding": "IMAGES"
+  },
+  "vars": {
+    "NEXT_PUBLIC_MAP_CENTER_LNG": "-96.7970",
+    "NEXT_PUBLIC_MAP_CENTER_LAT": "32.7767",
+    "NEXT_PUBLIC_MAP_ZOOM": "11",
+    "NEXT_PUBLIC_DEFAULT_CITY": "Dallas"
+  }
+}

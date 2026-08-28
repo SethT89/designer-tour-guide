@@ -920,14 +920,30 @@ git push
 
 **Files:**
 - Create: `wrangler.jsonc`, `open-next.config.ts`, `public/_headers`
-- Modify: `next.config.ts`, `package.json`
+- Modify: `next.config.ts`, `package.json`, `eslint.config.mjs`
 
-- [ ] **Step 1: Install the adapter and Wrangler**
+**Execution notes (2026-08-28):**
+- `@opennextjs/cloudflare@1.20.4` needs **`esbuild`** installed as a devDependency —
+  it is an unlisted peer (pulled transitively via `@opennextjs/aws`). Without it
+  `opennextjs-cloudflare build` throws `ERR_MODULE_NOT_FOUND: esbuild`.
+- `preview` / `deploy` scripts must run `node scripts/copy-maplibre-worker.mjs`
+  first — `opennextjs-cloudflare build` invokes `next build` in-process, bypassing
+  npm's `prebuild` hook, so the vendored maplibre worker would be missing.
+- Add `.open-next/**` and `cloudflare-env.d.ts` to `eslint.config.mjs`
+  `globalIgnores` — the generated Worker bundle otherwise adds ~18k lint problems.
+- `open-next.config.ts` uses `defineCloudflareConfig({})` (no R2 incremental cache)
+  since Phase 0 has no ISR/cached handlers — this avoids needing to create an R2
+  bucket before the first deploy.
+- Verified on the local Workers runtime (`npm run preview` → `http://localhost:8787`):
+  `/` renders the Dallas map, `/api/health` returns `{"ok":true}` from `.dev.vars`,
+  and `/vendor/maplibre/maplibre-gl-worker.mjs` serves as `text/javascript`.
+
+- [ ] **Step 1: Install the adapter, Wrangler, and esbuild**
 
 Run:
 ```bash
 npm install @opennextjs/cloudflare@latest
-npm install -D wrangler@latest
+npm install -D wrangler@latest esbuild
 ```
 
 - [ ] **Step 2: Create `wrangler.jsonc`**

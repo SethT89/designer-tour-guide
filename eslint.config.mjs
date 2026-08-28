@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Vendored third-party bundles and other static assets.
     "public/**",
+    // Generated build output.
+    ".open-next/**",
+    "cloudflare-env.d.ts",
   ]),
 ]);
 
