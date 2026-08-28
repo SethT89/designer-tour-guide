@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Designer Map
 
-## Getting Started
+A crowdsourced, editorially-curated map of tourist locations designers will love —
+architecture, interiors, signage, furniture, public art, galleries, well-designed
+shops. Anyone can submit a place; the curator approves it before it appears on the
+map.
 
-First, run the development server:
+- **Design spec:** [docs/superpowers/specs/2026-08-28-designer-map-design.md](docs/superpowers/specs/2026-08-28-designer-map-design.md)
+- **Phase plans:** [docs/superpowers/plans/](docs/superpowers/plans/)
+- **Live:** https://designer-tour-guide.sethmthomas89.workers.dev
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 16 (App Router, TypeScript) |
+| Hosting | Cloudflare Workers via OpenNext |
+| Database / Auth | Supabase (Postgres + PostGIS) |
+| Basemap | MapLibre GL v6 + OpenFreeMap |
+| Tests | Vitest + Testing Library |
+| CI | GitHub Actions |
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local    # then paste SUPABASE_SERVICE_ROLE_KEY into .env.local
+# .env already holds the public NEXT_PUBLIC_* values
+npm run dev                   # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`npm install` runs `scripts/copy-maplibre-worker.mjs` (postinstall), which vendors
+MapLibre's web worker into `public/vendor/maplibre/` (gitignored). Without it the
+basemap renders no vector tiles — see the script header for why.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Next.js dev server |
+| `npm run test` / `npm run test:run` | Vitest (watch / once) |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `next typegen && tsc --noEmit` |
+| `npm run build` | Next.js production build |
+| `npm run preview` | Build + run on the local Workers runtime (port 8787) |
+| `npm run deploy` | Build + deploy to Cloudflare Workers |
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+| Variable | Where | Secret? | Notes |
+|---|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | `.env` | No | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env` | No | Protected by RLS |
+| `NEXT_PUBLIC_MAP_CENTER_LNG` / `_LAT` | `.env` | No | Default map center (Dallas) |
+| `NEXT_PUBLIC_MAP_ZOOM` | `.env` | No | Default zoom |
+| `NEXT_PUBLIC_DEFAULT_CITY` | `.env` | No | Display name |
+| `SUPABASE_SERVICE_ROLE_KEY` | `.env.local` + `.dev.vars` locally; `wrangler secret` in prod | **Yes** | Server-only; never `NEXT_PUBLIC` |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Every push to `main` runs CI (lint, typecheck, test, build). Deploys are manual:
 
-## Deploy on Vercel
+```bash
+npm run deploy
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Production secrets are set once with `npx wrangler secret put <NAME>`. A weekly
+GitHub Action (`.github/workflows/keepalive.yml`) pings `/api/health` so the
+free-tier Supabase project never pauses.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Notes
+
+- **Lockfile:** regenerate with a full `rm -rf node_modules package-lock.json &&
+  npm install` rather than incremental `npm install <pkg>` — incremental installs
+  have left `package-lock.json` in a state that `npm ci` rejects on Linux CI.
+- The OpenFreeMap Liberty style logs harmless `Image "us-interstate_N" could not be
+  loaded` warnings; a custom style in Phase 3 removes them.
