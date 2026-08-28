@@ -105,8 +105,10 @@ Expected: `✔ No ESLint warnings or errors` (exit code 0).
 
 In `package.json`, add to `"scripts"`:
 ```json
-"typecheck": "tsc --noEmit"
+"typecheck": "next typegen && tsc --noEmit"
 ```
+`next typegen` regenerates `.next/types/` (which holds Next 16 globals like
+`LayoutProps`) so `tsc` also passes in a fresh clone / CI before any build has run.
 
 - [ ] **Step 6: Verify typecheck passes**
 
@@ -1160,7 +1162,7 @@ npm run dev                  # http://localhost:3000
 | `npm run dev` | Next.js dev server |
 | `npm run test` / `npm run test:run` | Vitest (watch / once) |
 | `npm run lint` | ESLint |
-| `npm run typecheck` | `tsc --noEmit` |
+| `npm run typecheck` | `next typegen && tsc --noEmit` |
 | `npm run build` | Next.js production build |
 | `npm run preview` | Build + run on the local Workers runtime |
 | `npm run deploy` | Build + deploy to Cloudflare Workers |
