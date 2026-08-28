@@ -287,6 +287,16 @@ git push
 **Files:**
 - Create: `.github/workflows/ci.yml`
 
+**Execution notes (2026-08-28):**
+- Use `node-version: 24` (matches local dev; Node 20 is deprecated on runners).
+- **`npm ci` fails on the Linux runner if `package-lock.json` was last touched by an
+  incremental `npm install <pkg>` — it accumulates stale/duplicate entries that pass
+  `npm ci` on macOS but not Linux.** After adding any dependency in later tasks, do a
+  full `rm -rf node_modules package-lock.json && npm install` and commit that
+  lockfile. This bit Tasks 5–8 repeatedly until a clean regen.
+- Split `npm ci --ignore-scripts` from `node scripts/copy-maplibre-worker.mjs` so an
+  install failure is distinguishable from a copy-script failure.
+
 - [ ] **Step 1: Write the workflow**
 
 Create `.github/workflows/ci.yml`:
@@ -306,9 +316,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts
+      - run: node scripts/copy-maplibre-worker.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:run
