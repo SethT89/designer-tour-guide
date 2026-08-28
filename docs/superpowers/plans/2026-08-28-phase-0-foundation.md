@@ -1084,13 +1084,12 @@ The `_headers` file and new deps must not break the build job. Confirm the Actio
 **Files:**
 - Create: `.github/workflows/keepalive.yml`
 
-- [ ] **Step 1: HUMAN STEP — store the Worker URL as a repo variable**
+**Execution note (2026-08-28):** the deployed Worker URL is
+`https://designer-tour-guide.sethmthomas89.workers.dev`. Hardcoded directly in the
+workflow (it is public and stable) rather than a repo variable — removes a human
+step. If a custom domain is added later, update the URL in the workflow.
 
-Ask the human to go to the repo → **Settings → Secrets and variables → Actions → Variables → New repository variable**:
-- Name: `WORKER_URL`
-- Value: `https://designer-tour-guide.<subdomain>.workers.dev` (no trailing slash)
-
-- [ ] **Step 2: Write the workflow**
+- [ ] **Step 1: Write the workflow**
 
 Create `.github/workflows/keepalive.yml`:
 ```yaml
