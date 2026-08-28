@@ -14,7 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: npm ci
+      - run: node --version && npm --version
+      - run: npm ci --ignore-scripts
+      - run: node scripts/copy-maplibre-worker.mjs
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run test:run
