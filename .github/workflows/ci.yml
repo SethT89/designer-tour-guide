@@ -14,7 +14,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - run: node --version && npm --version
+          cache: npm
+      # Split from postinstall so a copy-script failure is distinct from an install failure.
       - run: npm ci --ignore-scripts
       - run: node scripts/copy-maplibre-worker.mjs
       - run: npm run lint
