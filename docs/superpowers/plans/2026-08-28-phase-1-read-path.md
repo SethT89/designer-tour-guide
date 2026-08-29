@@ -4,7 +4,13 @@
 
 **Goal:** Turn the empty Dallas basemap into a browsable public map of curated places — pins with clustering, a map/list toggle, category filter chips, and server-rendered place detail pages — backed by a real `places` schema in Supabase seeded with five Dallas design landmarks.
 
-**Architecture:** A Postgres schema (`places`, `place_photos`) with PostGIS, RLS that exposes only `published` rows, and column-level `REVOKE` so submitter/internal fields never reach the public. A `places_public` view (`security_invoker`) flattens the geography point to `lng`/`lat` and aggregates photos. Next.js server components read that view with an anon Supabase client (RLS-scoped); the home page passes initial data to a client `HomeView` that renders either a MapLibre map (clustered GeoJSON source, tap a pin → bottom sheet) or a list. `/place/[slug]` is server-rendered for shareable links. A cached `/api/places/geojson` route serves the pin data.
+**Architecture:** A Postgres schema (`places`, `place_photos`) with PostGIS and RLS. The public roles have **no** access to the base tables; all reads go through a security-definer `places_public` view that filters to `status = 'published'`, flattens the geography point to `lng`/`lat`, and aggregates photos. Next.js server components read that view with an anon Supabase client; the home page passes initial data to a client `HomeView` that renders either a MapLibre map (clustered GeoJSON source, tap a pin → bottom sheet) or a list. `/place/[slug]` is server-rendered for shareable links. A cached `/api/places/geojson` route serves the pin data.
+
+> **Note (execution):** Task 1/2 SQL code blocks below predate two fixes now in
+> the real files — `set search_path = public, extensions;` at the top, and
+> `revoke all ... from anon, authenticated` + a plain (security-definer) view
+> instead of the ineffective column-level `revoke` + `security_invoker` view.
+> Trust `supabase/migrations/*.sql` over the snippets.
 
 **Tech Stack:** Next.js 16, MapLibre GL v6 (native clustering), Supabase (`@supabase/supabase-js`, PostGIS), Vitest.
 
@@ -14,7 +20,18 @@
 
 - **Read first:** the spec `docs/superpowers/specs/2026-08-28-designer-map-design.md` and the Phase 0 plan `docs/superpowers/plans/2026-08-28-phase-0-foundation.md` (its execution notes cover maplibre v6 quirks, the lockfile rule, `next typegen`).
 - Phase 0 is live at `https://designer-tour-guide.sethmthomas89.workers.dev`. Supabase project ref `hrovkahgsbiygaymeovu`.
-- **Migrations are applied by hand.** There is no Supabase CLI installed. Each migration is a committed `.sql` file under `supabase/migrations/`; a **HUMAN STEP** pastes it into the Supabase dashboard SQL Editor and runs it. (`npx supabase db push` is the eventual path — not set up now.)
+- **Migrations are applied via the Supabase CLI.** The project is linked
+  (`npx supabase link --project-ref hrovkahgsbiygaymeovu`, done 2026-08-28), so
+  `npx supabase db push` applies committed `.sql` files under
+  `supabase/migrations/`. Migration files **must** start with
+  `set search_path = public, extensions;` — the CLI runner does not put PostGIS's
+  `extensions` schema on the path, unlike the dashboard SQL Editor.
+- **Public reads never touch the base tables.** `revoke all on places,
+  place_photos from anon, authenticated` (a column-level `REVOKE` is silently
+  ineffective while Supabase's default privileges grant table-level `SELECT`).
+  All reads go through the **security-definer** `places_public` view, whose
+  `where status = 'published'` is the load-bearing filter. The Phase 2 admin
+  dashboard uses the service-role client, which bypasses this.
 - Existing Supabase clients: `src/lib/supabase/client.ts` (browser anon), `src/lib/supabase/admin.ts` (server service-role). This plan adds `src/lib/supabase/server.ts` (server anon, RLS-scoped — the default for public reads).
 - **No photo upload in Phase 1.** The schema supports `place_photos`; seed places have none. Components render a graceful no-photo state. Real photos arrive once Phase 2 builds the upload tool.
 - Conventional Commits; every commit ends with:
@@ -178,11 +195,10 @@ where p.status = 'published';
 grant select on places_public to anon, authenticated;
 ```
 
-- [ ] **Step 2: HUMAN STEP — apply the migration**
+- [ ] **Step 2: Apply the migration**
 
-Ask the human to open the Supabase dashboard → **SQL Editor** → **New query**, paste the entire contents of `supabase/migrations/0001_places_schema.sql`, and click **Run**. Expected: "Success. No rows returned."
-
-Wait for confirmation.
+Run: `npx supabase db push`
+Expected: `Applying migration 0001_places_schema.sql...` then `Finished supabase db push.`
 
 - [ ] **Step 3: Verify the schema exists**
 
@@ -292,9 +308,10 @@ values
 on conflict (slug) do nothing;
 ```
 
-- [ ] **Step 2: HUMAN STEP — apply the seed**
+- [ ] **Step 2: Apply the seed**
 
-Ask the human to paste `supabase/migrations/0002_seed_dallas.sql` into the SQL Editor and run it. Expected: "Success. Rows returned: 0" (the `insert` reports affected rows in the Results tab — 5).
+Run: `npx supabase db push`
+Expected: `Applying migration 0002_seed_dallas.sql...` then `Finished supabase db push.`
 
 - [ ] **Step 3: Verify via the anon REST API**
 
