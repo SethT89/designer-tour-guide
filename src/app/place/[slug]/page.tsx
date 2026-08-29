@@ -118,6 +118,17 @@ export default async function PlacePage({ params }: Params) {
           </a>
         )}
 
+        {place.google_maps_url && (
+          <a
+            className="label inline-block !text-accent underline decoration-1 underline-offset-4"
+            href={place.google_maps_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View on Google Maps →
+          </a>
+        )}
+
         <Link href="/" className="label block pt-2 !text-muted">
           ← Back to the map
         </Link>
