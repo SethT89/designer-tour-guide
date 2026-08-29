@@ -47,6 +47,23 @@ describe("parsePlaceInput", () => {
     expect(noUrl.ok && noUrl.value.external_url).toBeNull();
   });
 
+  it("normalises a google_maps_url and defaults it to null", () => {
+    const withLink = parsePlaceInput({
+      ...ok,
+      google_maps_url: "maps.app.goo.gl/abc123",
+    });
+    expect(withLink.ok && withLink.value.google_maps_url).toBe(
+      "https://maps.app.goo.gl/abc123",
+    );
+    const without = parsePlaceInput(ok);
+    expect(without.ok && without.value.google_maps_url).toBeNull();
+  });
+
+  it("rejects an invalid google_maps_url", () => {
+    const r = parsePlaceInput({ ...ok, google_maps_url: "http://" });
+    expect(r.ok).toBe(false);
+  });
+
   it("caps tags at 12", () => {
     const many = Array.from({ length: 20 }, (_, i) => `t${i}`).join(",");
     const r = parsePlaceInput({ ...ok, tags: many });

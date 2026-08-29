@@ -11,6 +11,7 @@ export type PlaceInputValue = {
   city: string;
   country: string;
   external_url: string | null;
+  google_maps_url: string | null;
   lat: number;
   lng: number;
 };
@@ -88,6 +89,10 @@ export function parsePlaceInput(raw: Record<string, string>): ParseResult {
   const external_url = normaliseUrl(raw.external_url ?? "");
   if (external_url === undefined) errors.external_url = "Not a valid URL.";
 
+  const google_maps_url = normaliseUrl(raw.google_maps_url ?? "");
+  if (google_maps_url === undefined)
+    errors.google_maps_url = "Not a valid URL.";
+
   if (Object.keys(errors).length > 0) return { ok: false, errors };
 
   return {
@@ -103,6 +108,7 @@ export function parsePlaceInput(raw: Record<string, string>): ParseResult {
       city,
       country,
       external_url: external_url ?? null,
+      google_maps_url: google_maps_url ?? null,
       lat: lat as number,
       lng: lng as number,
     },
