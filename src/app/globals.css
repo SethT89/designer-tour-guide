@@ -1,27 +1,49 @@
 @import "tailwindcss";
 @import "maplibre-gl/dist/maplibre-gl.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ── Field-guide palette ────────────────────────────────────────────────
+   Warm paper, near-black ink, one vermilion accent (matches the map pins),
+   hairline rules. Committed single light look — the basemap is light. */
+@theme {
+  --color-paper: #f6f3ec;
+  --color-paper-dim: #efeae0;
+  --color-ink: #191817;
+  --color-muted: #6b655c;
+  --color-accent: #e8483c;
+  --color-rule: color-mix(in srgb, #191817 14%, transparent);
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-display), Georgia, serif;
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Metadata label: uppercase, tracked, monospace — the spec-sheet voice. */
+.label {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* MapLibre controls tuned to the palette. */
+.maplibregl-ctrl-group {
+  border: 1px solid var(--color-rule) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: var(--color-paper) !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-rule) !important;
+}
+.maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--color-paper) 82%, transparent) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
 }
