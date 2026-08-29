@@ -73,6 +73,7 @@ export function PlaceForm({ mode, initial, action }: Props) {
     { label: string; lat: number; lng: number }[]
   >([]);
   const [geoBusy, setGeoBusy] = useState(false);
+  const [geoMsg, setGeoMsg] = useState<string | null>(null);
 
   const [keptPhotos, setKeptPhotos] = useState<ExistingPhoto[]>(
     initial?.photos ?? [],
@@ -89,14 +90,27 @@ export function PlaceForm({ mode, initial, action }: Props) {
   async function findOnMap() {
     if (!address.trim()) return;
     setGeoBusy(true);
+    setGeoMsg(null);
+    setGeoResults([]);
     try {
+      // Bias the search toward the current pin so a plain street address
+      // resolves near where the place actually is.
+      const near = pin ? `&lat=${pin.lat}&lon=${pin.lng}` : "";
       const res = await fetch(
-        `/api/geocode?q=${encodeURIComponent(address.trim())}`,
+        `/api/geocode?q=${encodeURIComponent(address.trim())}${near}`,
       );
       const body = await res.json();
-      setGeoResults(res.ok ? (body.results ?? []) : []);
+      const results = res.ok ? (body.results ?? []) : [];
+      setGeoResults(results);
+      if (results.length === 0) {
+        setGeoMsg(
+          res.ok
+            ? "No matches — drop the pin on the map below instead."
+            : "Address lookup is unavailable. Drop the pin on the map below.",
+        );
+      }
     } catch {
-      setGeoResults([]);
+      setGeoMsg("Address lookup failed. Drop the pin on the map below.");
     } finally {
       setGeoBusy(false);
     }
@@ -212,6 +226,7 @@ export function PlaceForm({ mode, initial, action }: Props) {
                   onClick={() => {
                     setPin({ lat: r.lat, lng: r.lng });
                     setGeoResults([]);
+                    setGeoMsg(null);
                   }}
                 >
                   {r.label}
@@ -220,6 +235,7 @@ export function PlaceForm({ mode, initial, action }: Props) {
             ))}
           </ul>
         )}
+        {geoMsg && <p className="label mt-2">{geoMsg}</p>}
       </Field>
 
       <Field label="Location">
