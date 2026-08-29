@@ -32,8 +32,22 @@ describe("placesToGeoJSON", () => {
         name: "Nasher Sculpture Center",
         slug: "nasher-sculpture-center",
         category: "museum_gallery",
+        thumb: null,
       },
     });
+  });
+
+  it("exposes the first photo's storage path as thumb", () => {
+    const fc = placesToGeoJSON([
+      {
+        ...row,
+        photos: [
+          { storage_path: "1/b.webp", credit: null, alt: "", sort_order: 1 },
+          { storage_path: "1/a.webp", credit: null, alt: "", sort_order: 0 },
+        ],
+      },
+    ]);
+    expect(fc.features[0].properties.thumb).toBe("1/a.webp");
   });
 
   it("returns an empty collection for no places", () => {

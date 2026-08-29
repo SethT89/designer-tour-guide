@@ -18,10 +18,13 @@
   "images": {
     "binding": "IMAGES"
   },
+  "kv_namespaces": [{ "binding": "RATE_LIMIT", "id": "48dc14f2beef4892824233a6f090ddd0" }],
   "vars": {
     "NEXT_PUBLIC_MAP_CENTER_LNG": "-96.7970",
     "NEXT_PUBLIC_MAP_CENTER_LAT": "32.7767",
     "NEXT_PUBLIC_MAP_ZOOM": "11",
-    "NEXT_PUBLIC_DEFAULT_CITY": "Dallas"
+    "NEXT_PUBLIC_DEFAULT_CITY": "Dallas",
+    // Allowlist for the /admin dashboard — plaintext, not a secret.
+    "ADMIN_EMAIL": "sethmthomas89@gmail.com"
   }
 }

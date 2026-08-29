@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { MapView } from "./MapView";
+import { AddPlaceButton } from "./AddPlaceButton";
 import { PlacePreviewSheet } from "./PlacePreviewSheet";
 import { PlaceList } from "./PlaceList";
 import { CategoryFilter } from "./CategoryFilter";
@@ -46,6 +47,7 @@ export function HomeView({ places }: { places: PlacePublic[] }) {
         {view === "map" ? (
           <>
             <MapView data={geojson} onSelect={setSelected} />
+            <AddPlaceButton />
             <PlacePreviewSheet
               place={selected}
               onClose={() => setSelected(null)}
