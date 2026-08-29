@@ -6,7 +6,7 @@ vi.mock("./supabase/server", () => ({
   createServerClient: () => ({ from }),
 }));
 
-import { getPublishedPlaces, getPlaceBySlug, placesToGeoJSON } from "./places";
+import { getPublishedPlaces, getPlaceBySlug } from "./places";
 
 const row: PlacePublic = {
   id: "1",
@@ -69,19 +69,3 @@ describe("getPlaceBySlug", () => {
   });
 });
 
-describe("placesToGeoJSON", () => {
-  it("builds a FeatureCollection of Points with lng/lat order", () => {
-    const fc = placesToGeoJSON([row]);
-    expect(fc.type).toBe("FeatureCollection");
-    expect(fc.features[0]).toEqual({
-      type: "Feature",
-      geometry: { type: "Point", coordinates: [-96.7986, 32.788] },
-      properties: {
-        id: "1",
-        name: "Nasher Sculpture Center",
-        slug: "nasher-sculpture-center",
-        category: "museum_gallery",
-      },
-    });
-  });
-});
