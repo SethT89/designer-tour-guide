@@ -10,6 +10,11 @@ export default defineConfig({
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
   },
   resolve: {
-    alias: { "@": new URL("./src/", import.meta.url).pathname },
+    alias: {
+      "@": new URL("./src/", import.meta.url).pathname,
+      // `server-only` throws outside a React Server Component (incl. Vitest);
+      // tests import modules that transitively pull it in.
+      "server-only": new URL("./src/test/empty.ts", import.meta.url).pathname,
+    },
   },
 });
