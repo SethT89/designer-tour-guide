@@ -15,6 +15,12 @@ map.
 - **Phase 1** — read path: `places` schema + PostGIS + RLS, five seeded Dallas
   landmarks, clustered map with a tap-to-preview bottom sheet, a map/list toggle,
   category filter chips, and server-rendered `/place/[slug]` pages.
+- **Phase 2** — write path: public `/submit` form (honeypot + 5/hour per-IP KV
+  rate limit) creates `pending` places with photos; a magic-link-authenticated
+  `/admin` dashboard (gated by `ADMIN_EMAIL` in `proxy.ts` and re-checked in every
+  server action) reviews the queue, publishes / rejects / edits, lists published
+  places, and adds places directly. Photos upload to a public Supabase Storage
+  bucket and show on the map preview, list, and detail page.
 
 Database migrations live in [`supabase/migrations/`](supabase/migrations/) and are
 applied with `npx supabase db push` (project linked via the Supabase CLI). Each
@@ -35,10 +41,14 @@ file starts with `set search_path = public, extensions;` for PostGIS.
 
 ```bash
 npm install
-cp .env.example .env.local    # then paste SUPABASE_SERVICE_ROLE_KEY into .env.local
+cp .env.example .env.local    # paste SUPABASE_SERVICE_ROLE_KEY + set ADMIN_EMAIL
 # .env already holds the public NEXT_PUBLIC_* values
 npm run dev                   # http://localhost:3000
 ```
+
+For the `/admin` magic-link login to work, the Supabase project's
+**Authentication → URL Configuration** must list the site URL and allow
+`http://localhost:3000/**` and the production `…workers.dev/**` as redirect URLs.
 
 `npm install` runs `scripts/copy-maplibre-worker.mjs` (postinstall), which vendors
 MapLibre's web worker into `public/vendor/maplibre/` (gitignored). Without it the
@@ -66,6 +76,9 @@ basemap renders no vector tiles — see the script header for why.
 | `NEXT_PUBLIC_MAP_ZOOM` | `.env` | No | Default zoom |
 | `NEXT_PUBLIC_DEFAULT_CITY` | `.env` | No | Display name |
 | `SUPABASE_SERVICE_ROLE_KEY` | `.env.local` + `.dev.vars` locally; `wrangler secret` in prod | **Yes** | Server-only; never `NEXT_PUBLIC` |
+| `ADMIN_EMAIL` | `.env.local` locally; `wrangler.jsonc` `vars` in prod | No | The one email allowed into `/admin`. Read server-side; not `NEXT_PUBLIC` |
+| `NEXT_PUBLIC_SITE_URL` | `.env` (prod URL); `.env.local` overrides to `http://localhost:3000` | No | Magic-link `emailRedirectTo` base; inlined at build |
+| `RATE_LIMIT` (KV) | `wrangler.jsonc` `kv_namespaces` | No | Workers KV namespace for the submission rate limit |
 
 ## Deployment
 
