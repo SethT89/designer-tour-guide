@@ -3,10 +3,13 @@ import { render } from "@testing-library/react";
 
 const mapCtor = vi.fn();
 const markerCtor = vi.fn();
-const on = vi.fn();
+const mapOn = vi.fn();
+const markerOn = vi.fn();
+const easeTo = vi.fn();
 const setLngLat = vi.fn().mockReturnThis();
 const addTo = vi.fn().mockReturnThis();
 const getLngLat = vi.fn().mockReturnValue({ lat: 1, lng: 2 });
+const contains = vi.fn().mockReturnValue(true);
 
 vi.mock("maplibre-gl", () => ({
   Map: class {
@@ -14,7 +17,10 @@ vi.mock("maplibre-gl", () => ({
       mapCtor(opts);
     }
     remove = vi.fn();
-    easeTo = vi.fn();
+    easeTo = easeTo;
+    on = mapOn;
+    getCanvas = () => ({ style: {} });
+    getBounds = () => ({ contains });
   },
   Marker: class {
     constructor(opts: unknown) {
@@ -22,7 +28,7 @@ vi.mock("maplibre-gl", () => ({
     }
     setLngLat = setLngLat;
     addTo = addTo;
-    on = on;
+    on = markerOn;
     getLngLat = getLngLat;
   },
   setWorkerUrl: vi.fn(),
@@ -31,11 +37,14 @@ vi.mock("maplibre-gl", () => ({
 import { PinPicker } from "./PinPicker";
 
 beforeEach(() => {
-  [mapCtor, markerCtor, on, setLngLat, addTo].forEach((m) => m.mockClear());
+  [mapCtor, markerCtor, mapOn, markerOn, easeTo, setLngLat, addTo].forEach((m) =>
+    m.mockClear(),
+  );
+  contains.mockReturnValue(true);
 });
 
 describe("PinPicker", () => {
-  it("renders a container and a draggable marker wired to dragend", () => {
+  it("wires dragend on the marker", () => {
     const onChange = vi.fn();
     const { container } = render(
       <PinPicker value={{ lat: 32.78, lng: -96.8 }} onChange={onChange} />,
@@ -45,12 +54,37 @@ describe("PinPicker", () => {
     ).not.toBeNull();
     expect(markerCtor).toHaveBeenCalledWith({ draggable: true });
 
-    const dragend = on.mock.calls.find((c) => c[0] === "dragend")?.[1] as
+    const dragend = markerOn.mock.calls.find((c) => c[0] === "dragend")?.[1] as
       | (() => void)
       | undefined;
-    expect(dragend).toBeTypeOf("function");
     dragend!();
     expect(onChange).toHaveBeenCalledWith({ lat: 1, lng: 2 });
+  });
+
+  it("drops the pin where the map is tapped", () => {
+    const onChange = vi.fn();
+    render(<PinPicker value={null} onChange={onChange} />);
+
+    const click = mapOn.mock.calls.find((c) => c[0] === "click")?.[1] as
+      | ((e: { lngLat: { lat: number; lng: number } }) => void)
+      | undefined;
+    expect(click).toBeTypeOf("function");
+    click!({ lngLat: { lat: 30, lng: -90 } });
+    expect(onChange).toHaveBeenCalledWith({ lat: 30, lng: -90 });
+  });
+
+  it("recentres only when the new point is off-screen", () => {
+    contains.mockReturnValue(true);
+    const { rerender } = render(
+      <PinPicker value={{ lat: 1, lng: 1 }} onChange={vi.fn()} />,
+    );
+    easeTo.mockClear();
+    rerender(<PinPicker value={{ lat: 2, lng: 2 }} onChange={vi.fn()} />);
+    expect(easeTo).not.toHaveBeenCalled();
+
+    contains.mockReturnValue(false);
+    rerender(<PinPicker value={{ lat: 50, lng: 50 }} onChange={vi.fn()} />);
+    expect(easeTo).toHaveBeenCalled();
   });
 
   it("falls back to the configured centre when value is null", () => {
@@ -59,10 +93,9 @@ describe("PinPicker", () => {
     expect(opts.center).toEqual([-96.797, 32.7767]);
   });
 
-  it("does not make the marker draggable in read-only mode", () => {
-    render(
-      <PinPicker value={{ lat: 1, lng: 1 }} onChange={vi.fn()} readOnly />,
-    );
+  it("does not make the marker draggable or add a click handler in read-only mode", () => {
+    render(<PinPicker value={{ lat: 1, lng: 1 }} onChange={vi.fn()} readOnly />);
     expect(markerCtor).toHaveBeenCalledWith({ draggable: false });
+    expect(mapOn.mock.calls.some((c) => c[0] === "click")).toBe(false);
   });
 });

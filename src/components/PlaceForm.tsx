@@ -100,17 +100,25 @@ export function PlaceForm({ mode, initial, action }: Props) {
         `/api/geocode?q=${encodeURIComponent(address.trim())}${near}`,
       );
       const body = await res.json();
-      const results = res.ok ? (body.results ?? []) : [];
-      setGeoResults(results);
-      if (results.length === 0) {
+      const results: { label: string; lat: number; lng: number }[] = res.ok
+        ? (body.results ?? [])
+        : [];
+      if (results.length > 0) {
+        // Jump the map to the best guess right away; the list below lets the
+        // user pick a different match, and the pin stays draggable.
+        setPin({ lat: results[0].lat, lng: results[0].lng });
+        setGeoResults(results);
+        setGeoMsg("Not it? Pick another from the list, or tap / drag the pin.");
+      } else {
+        setGeoResults([]);
         setGeoMsg(
           res.ok
-            ? "No matches — drop the pin on the map below instead."
-            : "Address lookup is unavailable. Drop the pin on the map below.",
+            ? "No match found — tap the spot on the map below to place the pin."
+            : "Address lookup is unavailable — tap the map below to place the pin.",
         );
       }
     } catch {
-      setGeoMsg("Address lookup failed. Drop the pin on the map below.");
+      setGeoMsg("Address lookup failed — tap the map below to place the pin.");
     } finally {
       setGeoBusy(false);
     }
@@ -242,8 +250,8 @@ export function PlaceForm({ mode, initial, action }: Props) {
         <PinPicker value={pin} onChange={setPin} />
         <p className="label mt-1">
           {pin
-            ? `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)} — drag the pin to adjust`
-            : "Search an address or drag the pin"}
+            ? `${pin.lat.toFixed(5)}, ${pin.lng.toFixed(5)} — tap the map or drag the pin to adjust`
+            : "Find an address above, or tap the map to place the pin"}
         </p>
       </Field>
 

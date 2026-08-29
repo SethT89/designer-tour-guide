@@ -50,6 +50,12 @@ export function PinPicker({ value, onChange, readOnly = false }: Props) {
         const { lat, lng } = marker.getLngLat();
         onChangeRef.current({ lat, lng });
       });
+      // Tap anywhere on the map to drop the pin there.
+      map.on("click", (e) => {
+        marker.setLngLat(e.lngLat);
+        onChangeRef.current({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      });
+      map.getCanvas().style.cursor = "crosshair";
     }
 
     return () => {
@@ -60,13 +66,22 @@ export function PinPicker({ value, onChange, readOnly = false }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [readOnly]);
 
-  // External value changes (a geocode pick) move the marker.
+  // External value changes move the marker; only recentre the map when the
+  // point is off-screen (a geocode jump), not for an in-view tap or drag.
   useEffect(() => {
     const map = mapRef.current;
     const marker = markerRef.current;
     if (!map || !marker || !value) return;
     marker.setLngLat([value.lng, value.lat]);
-    map.easeTo({ center: [value.lng, value.lat], zoom: 15 });
+    let visible = false;
+    try {
+      visible = map.getBounds().contains([value.lng, value.lat]);
+    } catch {
+      visible = false;
+    }
+    if (!visible) {
+      map.easeTo({ center: [value.lng, value.lat], zoom: 15 });
+    }
   }, [value]);
 
   return (
