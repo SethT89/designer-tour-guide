@@ -9,6 +9,17 @@ map.
 - **Phase plans:** [docs/superpowers/plans/](docs/superpowers/plans/)
 - **Live:** https://designer-tour-guide.sethmthomas89.workers.dev
 
+## Status
+
+- **Phase 0** — foundation: Next.js on Cloudflare Workers, Supabase, MapLibre basemap, CI.
+- **Phase 1** — read path: `places` schema + PostGIS + RLS, five seeded Dallas
+  landmarks, clustered map with a tap-to-preview bottom sheet, a map/list toggle,
+  category filter chips, and server-rendered `/place/[slug]` pages.
+
+Database migrations live in [`supabase/migrations/`](supabase/migrations/) and are
+applied with `npx supabase db push` (project linked via the Supabase CLI). Each
+file starts with `set search_path = public, extensions;` for PostGIS.
+
 ## Stack
 
 | Layer | Tech |
