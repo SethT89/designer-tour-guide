@@ -1,9 +1,15 @@
-import { BaseMap } from "@/components/BaseMap";
+import { getPublishedPlaces } from "@/lib/places";
+import { placesToGeoJSON } from "@/lib/geojson";
+import { HomeMap } from "@/components/HomeMap";
 
-export default function Home() {
+// Reads the DB per request — never prerender (CI build has no real Supabase).
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const places = await getPublishedPlaces();
   return (
     <main className="h-dvh w-full">
-      <BaseMap />
+      <HomeMap data={placesToGeoJSON(places)} />
     </main>
   );
 }
