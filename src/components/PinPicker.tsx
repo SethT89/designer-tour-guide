@@ -40,6 +40,13 @@ export function PinPicker({ value, onChange, readOnly = false }: Props) {
     });
     mapRef.current = map;
 
+    // The container often isn't at its final width when the map initialises
+    // (fonts loading, the results list expanding above it). Keep the canvas in
+    // sync with the box.
+    map.once("load", () => map.resize());
+    const ro = new ResizeObserver(() => map.resize());
+    ro.observe(containerRef.current);
+
     const marker = new Marker({ draggable: !readOnly })
       .setLngLat(start)
       .addTo(map);
@@ -59,6 +66,7 @@ export function PinPicker({ value, onChange, readOnly = false }: Props) {
     }
 
     return () => {
+      ro.disconnect();
       map.remove();
       mapRef.current = null;
       markerRef.current = null;

@@ -19,6 +19,8 @@ vi.mock("maplibre-gl", () => ({
     remove = vi.fn();
     easeTo = easeTo;
     on = mapOn;
+    once = vi.fn();
+    resize = vi.fn();
     getCanvas = () => ({ style: {} });
     getBounds = () => ({ contains });
   },
