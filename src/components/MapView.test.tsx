@@ -37,7 +37,7 @@ const fc: PlaceFeatureCollection = {
     {
       type: "Feature",
       geometry: { type: "Point", coordinates: [-96.8, 32.8] },
-      properties: { id: "1", name: "X", slug: "x", category: "shop" },
+      properties: { id: "1", name: "X", slug: "x", category: "shop", thumb: null },
     },
   ],
 };

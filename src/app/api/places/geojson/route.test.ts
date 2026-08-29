@@ -39,6 +39,7 @@ describe("GET /api/places/geojson", () => {
     expect(body.type).toBe("FeatureCollection");
     expect(body.features).toHaveLength(1);
     expect(body.features[0].geometry.coordinates).toEqual([-96.8, 32.8]);
+    expect(body.features[0].properties.thumb).toBeNull();
   });
 
   it("returns 500 when the data layer misbehaves", async () => {

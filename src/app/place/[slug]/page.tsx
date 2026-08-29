@@ -5,6 +5,7 @@ import { getPlaceBySlug } from "@/lib/places";
 import { categoryLabel } from "@/lib/categories";
 import { openInMapsUrl } from "@/lib/maps-link";
 import { NoPhoto } from "@/components/no-photo";
+import { PlacePhoto } from "@/components/PlacePhoto";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -26,11 +27,42 @@ export default async function PlacePage({ params }: Params) {
   const place = await getPlaceBySlug(slug);
   if (!place) notFound();
 
+  const photos = [...place.photos].sort(
+    (a, b) => a.sort_order - b.sort_order,
+  );
+
   return (
     <main className="mx-auto max-w-2xl pb-20">
-      <div className="h-60 w-full overflow-hidden border-b border-rule sm:h-80">
-        <NoPhoto category={place.category} />
+      <div className="relative h-60 w-full overflow-hidden border-b border-rule sm:h-80">
+        {photos.length > 0 ? (
+          <PlacePhoto
+            storagePath={photos[0].storage_path}
+            alt={photos[0].alt || place.name}
+            fill
+            priority
+            sizes="(max-width: 672px) 100vw, 42rem"
+            className="object-cover"
+          />
+        ) : (
+          <NoPhoto category={place.category} />
+        )}
       </div>
+
+      {photos.length > 1 && (
+        <div className="grid grid-cols-2 gap-1 border-b border-rule sm:grid-cols-3">
+          {photos.slice(1).map((ph) => (
+            <div key={ph.storage_path} className="relative aspect-[4/3]">
+              <PlacePhoto
+                storagePath={ph.storage_path}
+                alt={ph.alt || place.name}
+                fill
+                sizes="(max-width: 672px) 50vw, 14rem"
+                className="object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-6 px-5 pt-6">
         <header className="space-y-2">

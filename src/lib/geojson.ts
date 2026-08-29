@@ -9,6 +9,8 @@ export type PlaceFeature = {
     name: string;
     slug: string;
     category: PlaceCategory;
+    /** Storage path of the first photo, or null. */
+    thumb: string | null;
   };
 };
 
@@ -28,6 +30,9 @@ export function placesToGeoJSON(places: PlacePublic[]): PlaceFeatureCollection {
         name: p.name,
         slug: p.slug,
         category: p.category,
+        thumb:
+          [...p.photos].sort((a, b) => a.sort_order - b.sort_order)[0]
+            ?.storage_path ?? null,
       },
     })),
   };

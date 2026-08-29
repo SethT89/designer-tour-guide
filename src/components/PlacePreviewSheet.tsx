@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { categoryLabel } from "@/lib/categories";
 import { NoPhoto } from "./no-photo";
+import { PlacePhoto } from "./PlacePhoto";
 import type { PlaceFeature } from "@/lib/geojson";
 
 type Props = {
@@ -26,8 +27,18 @@ export function PlacePreviewSheet({ place, onClose }: Props) {
         className="relative w-full max-w-md border-t-2 border-accent bg-paper shadow-[0_-8px_40px_rgba(25,24,23,0.18)] sm:border sm:border-rule"
         style={{ animation: "sheet-up 240ms cubic-bezier(0.16,1,0.3,1)" }}
       >
-        <div className="h-40 overflow-hidden border-b border-rule">
-          <NoPhoto category={place.category} />
+        <div className="relative h-40 overflow-hidden border-b border-rule">
+          {place.thumb ? (
+            <PlacePhoto
+              storagePath={place.thumb}
+              alt={place.name}
+              fill
+              sizes="(max-width: 640px) 100vw, 28rem"
+              className="object-cover"
+            />
+          ) : (
+            <NoPhoto category={place.category} />
+          )}
         </div>
 
         <div className="space-y-2 px-5 py-4">
