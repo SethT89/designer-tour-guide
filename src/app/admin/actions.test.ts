@@ -76,6 +76,7 @@ const value = {
   city: "Dallas",
   country: "USA",
   external_url: null,
+  google_maps_url: null,
   lat: 32.78,
   lng: -96.8,
 };

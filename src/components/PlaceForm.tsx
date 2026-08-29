@@ -27,6 +27,7 @@ export type PlaceFormValues = {
   description: string;
   why: string;
   external_url: string;
+  google_maps_url: string;
   photos: ExistingPhoto[];
 };
 
@@ -60,6 +61,11 @@ export function PlaceForm({ mode, initial, action }: Props) {
   const [description, setDescription] = useState(initial?.description ?? "");
   const [why, setWhy] = useState(initial?.why ?? "");
   const [externalUrl, setExternalUrl] = useState(initial?.external_url ?? "");
+  const [googleMapsUrl, setGoogleMapsUrl] = useState(
+    initial?.google_maps_url ?? "",
+  );
+  const [gmBusy, setGmBusy] = useState(false);
+  const [gmMsg, setGmMsg] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
 
@@ -124,6 +130,52 @@ export function PlaceForm({ mode, initial, action }: Props) {
     }
   }
 
+  async function fillFromLink() {
+    const raw = googleMapsUrl.trim();
+    if (!raw) return;
+    setGmBusy(true);
+    setGmMsg(null);
+    try {
+      const res = await fetch("/api/resolve-place", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ url: raw }),
+      });
+      const body = (await res.json()) as {
+        name?: string | null;
+        lat?: number | null;
+        lng?: number | null;
+        mapsUrl?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        setGmMsg(
+          body.error ??
+            "Couldn't read that link. Paste a Google Maps place link.",
+        );
+        return;
+      }
+      if (body.mapsUrl) setGoogleMapsUrl(body.mapsUrl);
+      const gotName = !!body.name;
+      const gotPin = body.lat != null && body.lng != null;
+      if (gotName && !name.trim()) setName(body.name!);
+      if (gotPin) setPin({ lat: body.lat!, lng: body.lng! });
+      setGmMsg(
+        gotName && gotPin
+          ? "Added the name and dropped the pin."
+          : gotPin
+            ? "Dropped the pin — add a name above."
+            : gotName
+              ? "Got the name — tap the map to place the pin."
+              : "Couldn't read that link. Paste a Google Maps place link, or fill the form by hand.",
+      );
+    } catch {
+      setGmMsg("Couldn't reach the link resolver. Try again.");
+    } finally {
+      setGmBusy(false);
+    }
+  }
+
   async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const picked = Array.from(e.target.files ?? []);
     if (picked.length === 0) return;
@@ -161,6 +213,7 @@ export function PlaceForm({ mode, initial, action }: Props) {
     fd.set("description", description);
     fd.set("why", why);
     fd.set("external_url", externalUrl);
+    fd.set("google_maps_url", googleMapsUrl);
     fd.set("lat", String(pin.lat));
     fd.set("lng", String(pin.lng));
     fd.set("company", honeypotRef.current?.value ?? "");
@@ -199,6 +252,29 @@ export function PlaceForm({ mode, initial, action }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      <Field label="Google Maps link (optional)">
+        <div className="flex gap-2">
+          <input
+            className={fieldClass}
+            value={googleMapsUrl}
+            onChange={(e) => setGoogleMapsUrl(e.target.value)}
+            inputMode="url"
+            placeholder="Paste to prefill the name and pin"
+          />
+          {mode !== "admin-edit" && (
+            <button
+              type="button"
+              onClick={fillFromLink}
+              disabled={gmBusy || !googleMapsUrl.trim()}
+              className="label shrink-0 border border-ink px-3 disabled:opacity-40"
+            >
+              {gmBusy ? "…" : "Fill in"}
+            </button>
+          )}
+        </div>
+        {gmMsg && <p className="label mt-2">{gmMsg}</p>}
+      </Field>
+
       <Field label="Name">
         <input
           className={fieldClass}

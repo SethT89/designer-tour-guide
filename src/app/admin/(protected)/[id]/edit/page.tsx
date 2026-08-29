@@ -25,6 +25,7 @@ export default async function EditPlacePage({ params }: Params) {
     description: place.description,
     why: place.why,
     external_url: place.external_url ?? "",
+    google_maps_url: place.google_maps_url ?? "",
     photos: place.photos.map((p) => ({
       id: p.id,
       storage_path: p.storage_path,

@@ -16,6 +16,7 @@ const row: PlacePublic = {
   city: "Dallas",
   country: "USA",
   external_url: null,
+  google_maps_url: null,
   published_at: "2026-08-28T00:00:00Z",
   photos: [],
 };

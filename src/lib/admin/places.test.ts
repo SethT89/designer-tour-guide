@@ -21,6 +21,7 @@ const placeRow = {
   city: "Dallas",
   country: "USA",
   external_url: null,
+  google_maps_url: null,
   status: "pending",
   submitter_email: "fan@example.com",
   submitter_note: "please add",

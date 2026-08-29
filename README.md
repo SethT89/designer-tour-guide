@@ -20,7 +20,11 @@ map.
   `/admin` dashboard (gated by `ADMIN_EMAIL` in `proxy.ts` and re-checked in every
   server action) reviews the queue, publishes / rejects / edits, lists published
   places, and adds places directly. Photos upload to a public Supabase Storage
-  bucket and show on the map preview, list, and detail page.
+  bucket and show on the map preview, list, and detail page. Submitters can paste
+  a Google Maps link on the add-a-place forms to prefill the name and pin — no
+  Google API; the link is parsed and short links are resolved server-side
+  (`/api/resolve-place`), then stored and shown as "View on Google Maps" on the
+  place page.
 
 Database migrations live in [`supabase/migrations/`](supabase/migrations/) and are
 applied with `npx supabase db push` (project linked via the Supabase CLI). Each
