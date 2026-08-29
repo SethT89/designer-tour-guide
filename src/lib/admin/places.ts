@@ -3,7 +3,7 @@ import { createAdminClient } from "../supabase/admin";
 import type { PlaceStatus } from "../types";
 
 const COLUMNS =
-  "id,name,slug,description,why,category,tags,lng,lat,address,city,country,external_url,status,submitter_email,submitter_note,rejection_reason,created_at,published_at";
+  "id,name,slug,description,why,category,tags,lng,lat,address,city,country,external_url,google_maps_url,status,submitter_email,submitter_note,rejection_reason,created_at,published_at";
 
 export type AdminPlace = {
   id: string;
@@ -19,6 +19,7 @@ export type AdminPlace = {
   city: string;
   country: string;
   external_url: string | null;
+  google_maps_url: string | null;
   status: PlaceStatus;
   submitter_email: string | null;
   submitter_note: string | null;

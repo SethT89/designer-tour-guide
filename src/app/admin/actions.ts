@@ -20,6 +20,7 @@ const FIELDS = [
   "lat",
   "lng",
   "external_url",
+  "google_maps_url",
 ] as const;
 
 async function requireAdmin() {
@@ -103,6 +104,7 @@ export async function updatePlace(
       city: v.city,
       country: v.country,
       external_url: v.external_url,
+      google_maps_url: v.google_maps_url,
     })
     .eq("id", id);
   if (updateError) return { ok: false, error: updateError.message };

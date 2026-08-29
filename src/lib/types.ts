@@ -24,6 +24,7 @@ export type PlacePublic = {
   city: string;
   country: string;
   external_url: string | null;
+  google_maps_url: string | null;
   published_at: string | null;
   photos: PlacePhoto[];
 };

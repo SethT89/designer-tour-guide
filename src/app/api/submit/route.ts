@@ -17,6 +17,7 @@ const FIELDS = [
   "lat",
   "lng",
   "external_url",
+  "google_maps_url",
 ] as const;
 
 export async function POST(request: Request) {

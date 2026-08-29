@@ -6,7 +6,7 @@ export { placesToGeoJSON } from "./geojson";
 export type { PlaceFeature, PlaceFeatureCollection } from "./geojson";
 
 const COLUMNS =
-  "id,name,slug,description,why,category,tags,lng,lat,address,city,country,external_url,published_at,photos";
+  "id,name,slug,description,why,category,tags,lng,lat,address,city,country,external_url,google_maps_url,published_at,photos";
 
 export async function getPublishedPlaces(): Promise<PlacePublic[]> {
   const supabase = createServerClient();
